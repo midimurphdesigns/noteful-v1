@@ -15,7 +15,13 @@ app.listen(8080, function () {
 });
 
 app.get('/api/notes', (req, res) => {
-  res.json(data);
+  const searchTerm = req.query.searchTerm;
+  if (searchTerm) {
+    const filterBySearchTerm = data.filter(item => item.title.includes(searchTerm) || item.content.includes(searchTerm));
+    res.json(filterBySearchTerm);
+  } else {
+    res.json(data);
+  }
 });
 
 app.get('/api/notes/:id', (req, res) => {
