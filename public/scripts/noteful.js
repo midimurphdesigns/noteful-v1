@@ -47,7 +47,6 @@ const noteful = (function () {
           store.currentNote = detailsResponse;
           render();
         });
-
     });
   }
 
@@ -67,36 +66,24 @@ const noteful = (function () {
     });
   }
 
-  //   function searchPromise(delay) {
-  //     return new Promise((resolve, reject) => {
-  //       if (rand) {
-  //         resolve(
-  //           store.currentNote = updateResponse;
-  //         return api.search(store.currentSearchTerm);
-  //         )
-  //   } else {
-  //     reject('Tails!');
-  //   }
-  // });
-  //   }
-
-  // function searchHandle() {
-  //   return api.search(store.currentSearchTerm);
-  // }
-
-
-
-  // function notesHandle(updateResponse) {
-  //   store.notes = updateResponse;
-  // }  
-
-  function searchHandle(data) {
-    store.currentNote = data;
-    api.search(store.currentSearchTerm)
-      .then(updateResponse => {
-        store.notes = updateResponse;
-        render();
-      });
+  function searchPromise(data) {
+    if ($.type(data) === 'object') {
+      store.currentNote = data;
+      api.search(store.currentSearchTerm)
+        .then(updateResponse => {
+          store.notes = updateResponse;
+          render();
+        });
+    } else {
+      api.search(store.currentSearchTerm)
+        .then(searchResponse => {
+          store.notes = searchResponse;
+          if (data === store.currentNote.id) {
+            store.currentNote = {};
+          }
+          render();
+        });
+    }
   }
 
   function handleNoteFormSubmit() {
@@ -113,10 +100,10 @@ const noteful = (function () {
 
       if (store.currentNote.id) {
         api.update(store.currentNote.id, noteObj)
-          .then(searchHandle);
+          .then(searchPromise);
       } else {
         api.create(noteObj)
-          .then(searchHandle);
+          .then(searchPromise);
       }
     });
   }
@@ -129,29 +116,29 @@ const noteful = (function () {
     });
   }
 
+  // function deleteHandle(id) {
+  //   api.search(store.currentSearchTerm)
+  //     .then(searchResponse => {
+  //       store.notes = searchResponse;
+  //       if (id === store.currentNote.id) {
+  //         store.currentNote = {};
+  //       }
+  //       render();
+  //     });
+  // }
+
   function handleNoteDeleteClick() {
     $('.js-notes-list').on('click', '.js-note-delete-button', event => {
       event.preventDefault();
       const id = getNoteIdFromElement(event.currentTarget);
       api.remove(id)
-        .then(() => {
-          return api.search(store.currentSearchTerm);
-        })
-        .then(searchResponse => {
-          store.notes = searchResponse;
-          if (id === store.currentNote.id) {
-            store.currentNote = {};
-          }
-          render();
-        });
+        .then(searchPromise(id));
     });
   }
-  // }
 
   function bindEventListeners() {
     handleNoteItemClick();
     handleNoteSearchSubmit();
-
     handleNoteFormSubmit();
     handleNoteStartNewSubmit();
     handleNoteDeleteClick();
@@ -161,6 +148,7 @@ const noteful = (function () {
   return {
     render: render,
     bindEventListeners: bindEventListeners,
+    searchPromise,
   };
 
 }());
